@@ -21,7 +21,6 @@ library(plotly) #Make plots interactive
 library(viridis) #Colors
 library(scales) #To use "percent" function
 library(shinyjs) #Exploration tab - reset button
-library(tigerstats) #row percent values 
 library(ggbeeswarm) #plot all points nicely
 library(collapsibleTree) #plot type for endpoint category tree
 library(ggdark) #dark mode ggplot
@@ -46,7 +45,7 @@ source("functions.R")
 #### Overview Human Setup ####
 
 #Set up for polymer overview plot
-polydf<-rowPerc(xtabs( ~poly_h_f +effect_h_f, human_setup)) #pulls polymers by effect 
+polydf<-prop.table(xtabs( ~poly_h_f +effect_h_f, human_setup), margin = 1) * 100 #pulls polymers by effect
 polyf<-as.data.frame(polydf)%>% #Makes data frame 
   # replace_na(list(polymer = "Not Reported")) %>%  
   # mutate(effect = case_when(effect == "Y" ~ "Yes",
@@ -74,7 +73,7 @@ polyfinal<- data.frame(cbind(polyf, Endpoints))%>% #adds it as a column
   rename(Percent = Freq)#renames column#renames column
 
 #Set up for size overview plot
-sizedf<-rowPerc(xtabs(~size_h_f +effect_h_f, human_setup))
+sizedf<-prop.table(xtabs(~size_h_f +effect_h_f, human_setup), margin = 1) * 100
 sizef<-as.data.frame(sizedf)%>%
   # mutate(effect = case_when(effect == "Y" ~ "Yes",
   #                           effect == "N" ~ "No")) %>% 
@@ -98,7 +97,7 @@ sizefinal<- data.frame(cbind(sizef, study_s))%>%
   rename(Percent = Freq)#renames column
 
 #Set up for shape overview plot
-shapedf<-rowPerc(xtabs(~shape_h_f + effect_h_f, human_setup))
+shapedf<-prop.table(xtabs(~shape_h_f + effect_h_f, human_setup), margin = 1) * 100
 shapef<-as.data.frame(shapedf)%>%
   # mutate(effect = case_when(effect == "Y" ~ "Yes",
   #                           effect == "N" ~ "No")) %>% 
@@ -118,7 +117,7 @@ shapefinal<- data.frame(cbind(shapef, study_sh))%>%
   rename(Percent = Freq)#renames column
 
 #Set up for lvl1 overview plot
-lvl1df<-rowPerc(xtabs(~lvl1_h_f +effect_h_f, human_setup))
+lvl1df<-prop.table(xtabs(~lvl1_h_f +effect_h_f, human_setup), margin = 1) * 100
 lvl1f<-as.data.frame(lvl1df)%>%
   # mutate(effect = case_when(effect == "Y" ~ "Yes",
   #                           effect == "N" ~ "No")) %>% 
@@ -148,7 +147,7 @@ lvl1final<- data.frame(cbind(lvl1f, study_l))%>%
   rename(Percent = Freq)#renames column
 
 #Set up for life stage overview plot
-lifedf<-rowPerc(xtabs(~life_h_f +effect_h_f, human_setup))
+lifedf<-prop.table(xtabs(~life_h_f +effect_h_f, human_setup), margin = 1) * 100
 lifef<-as.data.frame(lifedf)%>%
   # replace_na(list(life.stage = "Not Reported")) %>% 
   # mutate(effect = case_when(effect == "Y" ~ "Yes",
@@ -171,7 +170,7 @@ lifefinal<- data.frame(cbind(lifef, studyli))%>%
   rename(Percent = Freq)#renames column
 
 #Set up for in vitro in vivo overview plot
-vivodf<-rowPerc(xtabs(~vivo_h_f +effect_h_f, human_setup))
+vivodf<-prop.table(xtabs(~vivo_h_f +effect_h_f, human_setup), margin = 1) * 100
 vivof<-as.data.frame(vivodf)%>%
   # mutate(effect = case_when(effect == "Y" ~ "Yes",
   #                           effect == "N" ~ "No")) %>%
@@ -225,7 +224,7 @@ vivofinal<- data.frame(cbind(vivof, study_v))%>%
 #   rename(Percent = freq)#renames column
 
 #Set up for exposure route overview plot
-routedf<-rowPerc(xtabs(~exposure_route_h_f +effect_h_f, human_setup))
+routedf<-prop.table(xtabs(~exposure_route_h_f +effect_h_f, human_setup), margin = 1) * 100
 routef<-as.data.frame(routedf)%>%
   # mutate(effect = case_when(effect == "Y" ~ "Yes",
   #                           effect == "N" ~ "No")) %>% 
@@ -285,7 +284,7 @@ ui <- dashboardPage(
                      br(),
                      menuItem("GitHub", href = "https://github.com/SCCWRP/ToMEx_HumanHealth", icon = icon("github")),
                      br(),
-                     menuItem("Aquatic Organisms v2.0", href = "https://sccwrp.shinyapps.io/aq_mp_tox_shiny/", icon = icon("fish")),
+                     menuItem("Aquatic Organisms v2.0.1", href = "https://sccwrp.shinyapps.io/aq_mp_tox_shiny/", icon = icon("fish")),
                      br())
                    
   ), #End dashboard sidebar
@@ -319,23 +318,26 @@ tabItem(tabName = "Welcome",
                      
                      p("To access previous versions of the ToMEx database and web application, ", a(href = "https://github.com/SCCWRP/human_mp_tox_shiny-", 'click here.')),
                      
-                     strong(p("Disclaimer: ToMEx is an evolving, community-built tool. The manuscript describing ToMEx 2.0 is currently under peer review. When using ToMEx 2.0, it is highly recommended that underlying data are carefully scrutinized before finalizing analyses or drawing major conclusions.")),
-                     
-                     h3("What is the Microplastics Toxicity Database?", align = "center"), 
-                     
-                     strong(p("This database is a repository for microplastics 
-                      toxicity data that may inform possible effects on Human Health.")), 
-                     
-                     p("This web application allows users to explore toxicity 
+                    strong(p("Disclaimer: ToMEx is an evolving, community-built tool. When using ToMEx 2.0, it is highly recommended that underlying data and code are carefully scrutinized before finalizing analyses or drawing major conclusions.")),
+                    
+                    h3("What is the Microplastics Toxicity Database?", align = "center"), 
+                    
+                    strong(p("This database is a repository for microplastics 
+                      toxicity data for the California Microplastics Health Effects Workshop.")), 
+                    
+                    p("This web application allows users to explore toxicity 
                     data using an intuitive interface while retaining the diversity and complexity inherent 
                     to microplastics. Data is extracted from existing, peer-reviewed manuscripts containing 
                     toxicity data pertaining to microplastics."),
-                     
-                     p("A full length description of the ToMEx 1.0 database and web application is published in ", 
-                       a(href = "https://www.springeropen.com/collections/sccwrp", 'Microplastics and Nanoplastics'),
-                       ". To access the open access manuscript, ", a(href = "https://microplastics.springeropen.com/articles/10.1186/s43591-022-00032-4", 'click here'),"."),
-                     
-                     p("Use the side panel on the left of the page to navigate to each section. Each section provides different information or data visualization options. 
+                  
+                    p("A full length description of the ToMEx 1.0 database and web application is published in ", 
+                      a(href = "https://www.springeropen.com/collections/sccwrp", 'Microplastics and Nanoplastics'),
+                      ". To access the open access manuscript, ", a(href = "https://microplastics.springeropen.com/articles/10.1186/s43591-022-00032-4", 'click here'),"."),
+
+                    p("A full length description of the ToMEx 2.0 database update is published in Microplastics and Nanoplastics", 
+                        ". To access the open access manuscript, ", a(href = "https://link.springer.com/article/10.1186/s43591-025-00145-6", 'click here'),"."),
+
+                    p("Use the side panel on the left of the page to navigate to each section. Each section provides different information or data visualization options. 
                       More specific instructions may be found within each section.")))),
         
         #bottom left box  
@@ -1125,8 +1127,14 @@ tabItem(tabName = "Citation",
             p(paste0("Thornton Hampton, L.M., Wyler, D.B., Carney Almroth, B., Coffin, S., Cowger, W., Doyle, D., ... Mehinto, A.C. (2025). ",
                      "Toxicity of Microplastics Explorer (Version 2.0) [Shiny application]. ",
                      "https://sccwrp.shinyapps.io/aq_mp_tox_shiny/. Accessed ", 
-                     format(Sys.Date(), "%B %d, %Y"), "."))
-        ),
+                     format(Sys.Date(), "%B %d, %Y"), ".")),
+            br(),
+            p("Peer-reviewed manuscript citations:"),
+            br(),
+            p("Hampton, L.M.T., Wyler, D.B., Almroth, B.C. et al. The Toxicity of Microplastics Explorer (ToMEx) 2.0. Micropl.&Nanopl. 5, 38 (2025). https://doi.org/10.1186/s43591-025-00145-6."),
+            br(),
+            p("Thornton Hampton, L.M., Lowman, H., Coffin, S. et al. A living tool for the continued exploration of microplastic toxicity. Micropl.&Nanopl. 2, 13 (2022). https://doi.org/10.1186/s43591-022-00032-4.")
+                                    ),
         
 ) #closes tab
 
